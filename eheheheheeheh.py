@@ -24,6 +24,20 @@ def load_image(name, colorkey=None):
         image = image.convert_alpha()
     return image
 
+class Bob(pygame.sprite.Sprite):
+    image = load_image("bob.png")
+    image_boom = load_image("bum.png", -1)
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = Bob.image
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(width)
+        self.rect.y = random.randrange(height)
+
+    def update(self, *args):
+        self.rect = self.rect.move(random.randrange(3) - 1, random.randrange(3) - 1)
+        if args and args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
+            self.image = self.image_boom
 
 # image = load_image("jorik.jpg")
 # img_1 = pygame.transform.scale(image, (200, 100))
@@ -37,14 +51,17 @@ all_sprites = pygame.sprite.Group()
 # sprite.rect.x = 5
 # sprite.rect.y = 50
 
-bob_image = load_image('bob.png')
-for i in range(50):
-    bob = pygame.sprite.Sprite(all_sprites)
-    bob.image = bob_image
-    bob.rect = bob.image.get_rect()
+# bob_image = load_image('bob.png')
+# for i in range(50):
+#     bob = pygame.sprite.Sprite(all_sprites)
+#     bob.image = bob_image
+#     bob.rect = bob.image.get_rect()
+#
+#     bob.rect.x = random.randrange(width)
+#     bob.rect.y = random.randrange(height)
 
-    bob.rect.x = random.randrange(width)
-    bob.rect.y = random.randrange(height)
+for i in range(50):
+    Bob(all_sprites)
 
 running = True
 while running:
@@ -54,7 +71,8 @@ while running:
     # screen.blit(image, (10, 10))
     # screen.blit(img_1, (150, 150))
     # screen.blit(img_2, (250, 250))
+    screen.fill((random.randrange(100, 255), random.randrange(100, 255), random.randrange(100, 255)))
     all_sprites.draw(screen)
-
+    all_sprites.update(event)
     pygame.display.flip()
 pygame.quit()
