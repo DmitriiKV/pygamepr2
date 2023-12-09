@@ -41,22 +41,16 @@ class Board:
         celly = ((mousepos[1] - self.top) // self.cell_size)
         if cellx < 0 or cellx >= self.width or celly < 0 or celly >= self.height:
             return None
-        self.open_cell(cellx, celly)
+        return self.open_cell(cellx, celly)
 
-    def open_cell(self, x, y):
+    def open_cell(self, cc):
         global c
         c = 0
-        for xx in range(x - 1, x + 1):
+        for xx in range(cc[0] - 1, cc[0] + 1):
             for yy in range(y - 1, y + 1):
                 if self.board[xx][yy] == 10:
                     c += 1
-        font = pygame.font.Font(None, 2)
-        text = font.render(f"{c}", True, (100, 255, 100))
-        text_x = self.width // 2 - text.get_width() // 2
-        text_y = self.height // 2 - text.get_height() // 2
-        text_w = text.get_width()
-        text_h = text.get_height()
-        screen.blit(text, (text_x, text_y))
+
         return c
 
     def on_click(self, cellcoords):
@@ -82,6 +76,13 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                font = pygame.font.Font(None, 2)
+                text = font.render(f"{123}", True, (100, 255, 100))
+                text_x = board.width // 2 - text.get_width() // 2
+                text_y = board.height // 2 - text.get_height() // 2
+                text_w = text.get_width()
+                text_h = text.get_height()
+                screen.blit(text, (text_x, text_y))
                 board.get_click(event.pos)
 
         screen.fill(pygame.Color('black'))
