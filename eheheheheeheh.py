@@ -25,8 +25,8 @@ def load_image(name, colorkey=None):
     return image
 
 class Bob(pygame.sprite.Sprite):
-    image = load_image("bob.png")
-    image_boom = load_image("bum.png", -1)
+    image = load_image("bomb.png")
+    image_boom = load_image("boom.png", -1)
     def __init__(self, *group):
         super().__init__(*group)
         self.image = Bob.image
@@ -60,7 +60,7 @@ all_sprites = pygame.sprite.Group()
 #     bob.rect.x = random.randrange(width)
 #     bob.rect.y = random.randrange(height)
 
-for i in range(50):
+for i in range(20):
     Bob(all_sprites)
 
 running = True
@@ -71,7 +71,7 @@ while running:
     # screen.blit(image, (10, 10))
     # screen.blit(img_1, (150, 150))
     # screen.blit(img_2, (250, 250))
-    screen.fill((random.randrange(100, 255), random.randrange(100, 255), random.randrange(100, 255)))
+    screen.fill((0, 0, 0))
     all_sprites.draw(screen)
     all_sprites.update(event)
     pygame.display.flip()
