@@ -1,94 +1,84 @@
-import pygame
+import os
 import random
+import sys
+
+import pygame
+
+pygame.init()
+size = width, height = 500, 500
+screen = pygame.display.set_mode(size)
+screen.fill((250, 250, 250))
 
 
-class Board:
-    def __init__(self, width, height, mines):
-        self.width = width
-        self.height = height
-        self.board = [[-1] * width for _ in range(height)]
-        for el in range(mines):
-            self.board[random.randrange(0, height)][random.randrange(0, width)] = 10
-
-        self.left = 5
-        self.top = 5
-        self.cell_size = 30
-        self.mines = mines
-
-    def set_view(self, left, top, cell_size):
-        self.left = left
-        self.top = top
-        self.cell_size = cell_size
-
-    def render(self, screen):
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.board[x][y] == 10:
-                    pygame.draw.rect(screen, pygame.Color('red'),
-                                     (x * self.cell_size + self.left, y * self.cell_size + self.top,
-                                      self.cell_size, self.cell_size))
-                pygame.draw.rect(screen, pygame.Color('white'),
-                                 (x * self.cell_size + self.left, y * self.cell_size + self.top,
-                                  self.cell_size, self.cell_size), 1)
-
-    def get_click(self, mousepos):
-        cell = self.get_cell(mousepos)
-        if cell:
-            self.on_click(cell)
-
-    def get_cell(self, mousepos):
-        cellx = ((mousepos[0] - self.left) // self.cell_size)
-        celly = ((mousepos[1] - self.top) // self.cell_size)
-        if cellx < 0 or cellx >= self.width or celly < 0 or celly >= self.height:
-            return None
-        return self.open_cell(cellx, celly)
-
-    def open_cell(self, cc):
-        global c
-        c = 0
-        for xx in range(cc[0] - 1, cc[0] + 1):
-            for yy in range(y - 1, y + 1):
-                if self.board[xx][yy] == 10:
-                    c += 1
-
-        return c
-
-    def on_click(self, cellcoords):
-        for i in range(self.width):
-            self.board[cellcoords[1]][i] = (self.board[cellcoords[1]][i] + 1) % 2
-        for i in range(self.height):
-            if i == cellcoords[1]:
-                continue
-            self.board[i][cellcoords[0]] = (self.board[i][cellcoords[0]] + 1) % 2
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', name)
+    if not os.path.isfile(fullname):
+        print(f"файл с изображением вот таким -> {fullname} <- не найден!!!")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
-def main():
-    pygame.init()
+class Ball(pygame.sprite.Sprite):
+    def __init__(self, radius, x, y):
+        super().__init__(all_sprites)
+        self.radius = radius
+        self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA, 32)
+        pygame.draw.circle(self.image, pygame.Color('red'), (radius, radius), radius)
+        self.rect = pygame.Rect(x, y, 2 * radius, 2 * radius)
+        self.vx = random.randrange(-5, 5)
+        self.vy = random.randrange(-5, 5)
 
-    running = True
+    def update(self, *args, **kwargs):
+        self.rect = self.rect.move(self.vx, self.vy)
+        if pygame.sprite.spritecollideany(self, horizon_bords):
+            self.vy = - self.vy
+        if pygame.sprite.spritecollideany(self, vertical_bords):
+            self.vx = - self.vx
+        if pygame.sprite.spritecollideany(self, all_sprites):
+            self.rect = self.rect.move(self.vx, self.vy)
 
-    board = Board(int(input()), int(input()), int(input()))
-    print(board.board)
-    size = width, height = board.width * board.cell_size + board.left * 2, board.height * board.cell_size + board.top * 2
-    screen = pygame.display.set_mode(size)
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                font = pygame.font.Font(None, 2)
-                text = font.render(f"{123}", True, (100, 255, 100))
-                text_x = board.width // 2 - text.get_width() // 2
-                text_y = board.height // 2 - text.get_height() // 2
-                text_w = text.get_width()
-                text_h = text.get_height()
-                screen.blit(text, (text_x, text_y))
-                board.get_click(event.pos)
-
-        screen.fill(pygame.Color('black'))
-        board.render(screen)
-        pygame.display.flip()
+class Border(pygame.sprite.Sprite):
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(all_sprites)
+        if x1 == x2:
+            self.add(vertical_bords)
+            self.image = pygame.Surface([1, y2 - y1])
+            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
+        else:
+            self.add(horizon_bords)
+            self.image = pygame.Surface([x2 - x1, 1])
+            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
-if __name__ == '__main__':
-    main()
+all_sprites = pygame.sprite.Group()
+
+horizon_bords = pygame.sprite.Group()
+vertical_bords = pygame.sprite.Group()
+
+Border(5, 5, width - 5, 5)
+Border(5, height - 5, width - 5, height - 5)
+Border(5, 5, 5, height - 5)
+Border(width - 5, 5, width - 5, height - 5)
+
+for i in range(50):
+    Ball(20, 100, 100)
+clock = pygame.time.Clock()
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    screen.fill((250, 250, 250))
+    all_sprites.draw(screen)
+    all_sprites.update(event)
+    pygame.display.flip()
+    clock.tick(50)
+pygame.quit()
