@@ -5,15 +5,25 @@ import sys
 import pygame
 
 pygame.init()
-size = width, height = 500, 500
+size = width, height = 400, 300
 screen = pygame.display.set_mode(size)
-screen.fill((250, 250, 250))
+screen.fill((255, 255, 255))
+
+player = None
+player_group = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
 
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
-        print(f"файл с изображением вот таким -> {fullname} <- не найден!!!")
+        print(f"Файл с изображением '{fullname}' не найден!")
         sys.exit()
     image = pygame.image.load(fullname)
     if colorkey is not None:
@@ -26,59 +36,45 @@ def load_image(name, colorkey=None):
     return image
 
 
-class Ball(pygame.sprite.Sprite):
-    def __init__(self, radius, x, y):
-        super().__init__(all_sprites)
-        self.radius = radius
-        self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA, 32)
-        pygame.draw.circle(self.image, pygame.Color('red'), (radius, radius), radius)
-        self.rect = pygame.Rect(x, y, 2 * radius, 2 * radius)
-        self.vx = random.randrange(-5, 5)
-        self.vy = random.randrange(-5, 5)
+def start_screen(flag=True):
+    intro_text = ["Заставка", "", "Правила игры", "Выход"]
+    fon = pygame.transform.scale(load_image('BG.png'), (width, height))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in intro_text:
+        string_renderer = font.render(line, 1, pygame.Color('black'))
+        intro_rect = string_renderer.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_renderer, intro_rect)
 
-    def update(self, *args, **kwargs):
-        self.rect = self.rect.move(self.vx, self.vy)
-        if pygame.sprite.spritecollideany(self, horizon_bords):
-            self.vy = - self.vy
-        if pygame.sprite.spritecollideany(self, vertical_bords):
-            self.vx = - self.vx
-        if pygame.sprite.spritecollideany(self, all_sprites):
-            self.rect = self.rect.move(self.vx, self.vy)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(30)
 
-class Border(pygame.sprite.Sprite):
-    def __init__(self, x1, y1, x2, y2):
-        super().__init__(all_sprites)
-        if x1 == x2:
-            self.add(vertical_bords)
-            self.image = pygame.Surface([1, y2 - y1])
-            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
-        else:
-            self.add(horizon_bords)
-            self.image = pygame.Surface([x2 - x1, 1])
-            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
-
-
-all_sprites = pygame.sprite.Group()
-
-horizon_bords = pygame.sprite.Group()
-vertical_bords = pygame.sprite.Group()
-
-Border(5, 5, width - 5, 5)
-Border(5, height - 5, width - 5, height - 5)
-Border(5, 5, 5, height - 5)
-Border(width - 5, 5, width - 5, height - 5)
-
-for i in range(50):
-    Ball(20, 100, 100)
 clock = pygame.time.Clock()
+start_screen()
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
-    screen.fill((250, 250, 250))
-    all_sprites.draw(screen)
-    all_sprites.update(event)
+            terminate()
+        elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            game()
+
+    for sprite in all_sprites:
+        camera.apply(sprite)
+    screen.fill(pygame.Color(0, 0, 0))
+    tiles_group.draw(screen)
+    player_group.draw(screen)
     pygame.display.flip()
-    clock.tick(50)
-pygame.quit()
+    clock.tick(30)
+terminate()
